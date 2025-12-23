@@ -64,9 +64,7 @@ Transforms raw nested JSON financial data (one file per company) into a canonica
   - All numeric values properly typed
   - No TTM (trailing twelve months) or partial data included
 
-
----------------------- 2. `create_labeled_dataset.py`
-
+-------------------------- 2. `Create_and_analyze_code.ipynb` 
 **Purpose:**
 Applies rule-based labeling logic to the canonical dataset to identify financially risky companies. Uses a rolling 3-year lookback window to assess financial health metrics without introducing future information leakage.
 
@@ -123,120 +121,6 @@ COMPANY123 | 2020 | 2 | 1500000 | 1 | 1 | -500000 | -300000 | 2000000 | 50000000
 - Rows retained after filtering: ~400 (37% of original canonical dataset)
 - Rows with all required features: 100% (fully non-null for core metrics)
 - Date range: 2016–2024
-
-
--------------------- 3. `label_validation_analysis.ipynb` 
-
-**Purpose:**
-Performs exploratory data analysis (EDA) and validation of the labeled dataset. Verifies that labels reflect genuine financial health differences and that the labeling rules have strong signal separation. Provides sector-level insights into financial risk patterns.
-
-**Input:**
-- **Files:** `labeled_financials.csv`, `canonical_financials.csv`
-- **Merge Key:** (company_id, financial_year_end)
-
-**Analysis Sections:**
-
-#### **Cell 1: Setup & Configuration**
-- Imports visualization libraries: pandas, numpy, matplotlib, seaborn
-- Configures inline plots and visual theme
-
-#### **Cell 2: Data Loading & Overview**
-```python
-def load_and_prepare_data()
-```
-- Loads labeled and canonical datasets
-- Merges sector information from canonical dataset
-- **Output Metrics:**
-  - Total labeled rows
-  - Count of healthy (0) vs risky (1) observations
-  - Data preview (first 100 rows)
-
-**Key Statistics:**
-- Total Rows: ~400
-- Healthy: ~370–375 (92%)
-- Risky: ~25–30 (8%)
-
-#### **Cell 3: Risky Label Composition Analysis**
-```python
-def analyze_risky_label_composition(df)
-```
-Investigates what drives the "risky" label by comparing healthy vs risky cohorts:
-
-| Metric | Healthy (0) | Risky (1) | Insight |
-|--------|------------|----------|---------|
-| % with weak OCF history | ~15% | ~80–90% | Strong separation: risky companies have persistent negative OCF |
-| Avg OCF Volatility | ~1.5M | ~3.5M | Risky companies show 2–3× higher cash flow volatility |
-| % with financing dependency | ~25% | ~60–70% | Risky firms rely heavily on external financing |
-
-**Output:** Dictionary of metrics validating that labeling rules effectively separate health groups
-
-#### **Cell 4: Sector-Level Risk Analysis**
-```python
-def analyze_sector_risk(df)
-```
-Aggregates risk metrics by sector (industry classification):
-
-| Metric | Purpose |
-|--------|---------|
-| `total_companies` | Count of company-year observations per sector |
-| `risk_rate` | % of observations labeled as risky (mean of label column) |
-| `avg_ocf_volatility` | Average cash flow volatility by sector |
-| `avg_financing_dependency` | Average financing dependency flag by sector |
-
-**Key Findings:**
-- High-risk sectors: Financial Services, certain cyclical industries
-- Low-risk sectors: Defensive sectors (FMCG, pharma, utilities)
-- Sector dynamics: Financial Services shows structurally different cash flow patterns (excluded from modeling to avoid distortion)
-
-**Output:** Sorted table (descending by risk_rate) showing top 10 riskiest sectors
-
-#### **Cell 5: Multi-Panel Visualizations**
-Four-panel visualization dashboard:
-
-1. **OCF Positive Count Distribution** (Box plot)
-   - X-axis: Label (0=Healthy, 1=Risky)
-   - Y-axis: Number of positive OCF years in lookback window
-   - **Interpretation:** Clear separation—risky firms show 0–1 positive years vs healthy firms show 2–3
-
-2. **OCF Volatility Distribution** (Box plot)
-   - X-axis: Label
-   - Y-axis: Standard deviation of OCF
-   - **Interpretation:** Risky firms have significantly higher volatility
-
-3. **Financing Dependency by Label** (Bar chart)
-   - X-axis: Label
-   - Y-axis: % of observations with financing_dependency_flag = 1
-   - **Interpretation:** Clear spike in financing reliance for risky firms
-
-4. **Top 5 Riskiest Sectors** (Horizontal bar chart)
-   - X-axis: Risk rate (% risky)
-   - Y-axis: Sector name
-   - **Interpretation:** Identifies which sectors contribute most risky observations
-
-**Output:** Multi-panel figure with strong visual evidence that labeling rules create meaningful, separable classes
-
----
-
-## Data Flow Summary
-
-```
-data/raw/*.json (97 company files)
-        ↓
-[create_canonical_financials.py]
-        ↓
-canonical_financials.csv (~1,100 rows)
-        ↓
-[create_labeled_dataset.py]
-        ↓
-labeled_financials.csv (~400 rows with labels)
-        ↓
-[label_validation_analysis.ipynb]
-        ↓
-Validation Report & Visualizations
-```
-
-
--------------------------- 4. `analyze_code.ipynb` 
 
 **Purpose:**
 In-depth statistical and visual analysis of the labeled dataset to validate labeling logic and identify key drivers of financial risk. This notebook bridges validation analysis (label_validation_analysis.ipynb) and feature engineering by quantifying the signal strength and understanding label composition.
@@ -376,7 +260,117 @@ RECLTD        1.0
 SHRIRAMFIN    1.0
 ZOMATO        1.0
 
------------------------- 5. `v1_dataset_create.ipynb`
+-------------------- 3. `label_validation_analysis.ipynb` 
+
+**Purpose:**
+Performs exploratory data analysis (EDA) and validation of the labeled dataset. Verifies that labels reflect genuine financial health differences and that the labeling rules have strong signal separation. Provides sector-level insights into financial risk patterns.
+
+**Input:**
+- **Files:** `labeled_financials.csv`, `canonical_financials.csv`
+- **Merge Key:** (company_id, financial_year_end)
+
+**Analysis Sections:**
+
+#### **Cell 1: Setup & Configuration**
+- Imports visualization libraries: pandas, numpy, matplotlib, seaborn
+- Configures inline plots and visual theme
+
+#### **Cell 2: Data Loading & Overview**
+```python
+def load_and_prepare_data()
+```
+- Loads labeled and canonical datasets
+- Merges sector information from canonical dataset
+- **Output Metrics:**
+  - Total labeled rows
+  - Count of healthy (0) vs risky (1) observations
+  - Data preview (first 100 rows)
+
+**Key Statistics:**
+- Total Rows: ~400
+- Healthy: ~370–375 (92%)
+- Risky: ~25–30 (8%)
+
+#### **Cell 3: Risky Label Composition Analysis**
+```python
+def analyze_risky_label_composition(df)
+```
+Investigates what drives the "risky" label by comparing healthy vs risky cohorts:
+
+| Metric | Healthy (0) | Risky (1) | Insight |
+|--------|------------|----------|---------|
+| % with weak OCF history | ~15% | ~80–90% | Strong separation: risky companies have persistent negative OCF |
+| Avg OCF Volatility | ~1.5M | ~3.5M | Risky companies show 2–3× higher cash flow volatility |
+| % with financing dependency | ~25% | ~60–70% | Risky firms rely heavily on external financing |
+
+**Output:** Dictionary of metrics validating that labeling rules effectively separate health groups
+
+#### **Cell 4: Sector-Level Risk Analysis**
+```python
+def analyze_sector_risk(df)
+```
+Aggregates risk metrics by sector (industry classification):
+
+| Metric | Purpose |
+|--------|---------|
+| `total_companies` | Count of company-year observations per sector |
+| `risk_rate` | % of observations labeled as risky (mean of label column) |
+| `avg_ocf_volatility` | Average cash flow volatility by sector |
+| `avg_financing_dependency` | Average financing dependency flag by sector |
+
+**Key Findings:**
+- High-risk sectors: Financial Services, certain cyclical industries
+- Low-risk sectors: Defensive sectors (FMCG, pharma, utilities)
+- Sector dynamics: Financial Services shows structurally different cash flow patterns (excluded from modeling to avoid distortion)
+
+**Output:** Sorted table (descending by risk_rate) showing top 10 riskiest sectors
+
+#### **Cell 5: Multi-Panel Visualizations**
+Four-panel visualization dashboard:
+
+1. **OCF Positive Count Distribution** (Box plot)
+   - X-axis: Label (0=Healthy, 1=Risky)
+   - Y-axis: Number of positive OCF years in lookback window
+   - **Interpretation:** Clear separation—risky firms show 0–1 positive years vs healthy firms show 2–3
+
+2. **OCF Volatility Distribution** (Box plot)
+   - X-axis: Label
+   - Y-axis: Standard deviation of OCF
+   - **Interpretation:** Risky firms have significantly higher volatility
+
+3. **Financing Dependency by Label** (Bar chart)
+   - X-axis: Label
+   - Y-axis: % of observations with financing_dependency_flag = 1
+   - **Interpretation:** Clear spike in financing reliance for risky firms
+
+4. **Top 5 Riskiest Sectors** (Horizontal bar chart)
+   - X-axis: Risk rate (% risky)
+   - Y-axis: Sector name
+   - **Interpretation:** Identifies which sectors contribute most risky observations
+
+**Output:** Multi-panel figure with strong visual evidence that labeling rules create meaningful, separable classes
+
+---
+
+## Data Flow Summary
+
+```
+data/raw/*.json (97 company files)
+        ↓
+[create_canonical_financials.py]
+        ↓
+canonical_financials.csv (~1,100 rows)
+        ↓
+[create_labeled_dataset.py]
+        ↓
+labeled_financials.csv (~400 rows with labels)
+        ↓
+[label_validation_analysis.ipynb]
+        ↓
+Validation Report & Visualizations
+```
+
+------------------------ 4. `v1_dataset_create.ipynb`
 
 **Purpose:**
 Constructs the final modeling-ready dataset by combining canonical financials with labels, engineering rolling 3-year features, and applying domain-specific filters. This notebook creates the input dataset for machine learning models (logistic regression, XGBoost).
@@ -475,7 +469,7 @@ Risky (1): 35
 
 --------------------------- Model Training --------------------------
 
----------------- 6. `train_logistic_regression_v1.ipynb`
+---------------- 5. `train_logistic_regression_v1.ipynb`
 
 **Purpose:**
 Trains an interpretable logistic regression model for financial risk classification. Implements strict time-based evaluation (no temporal leakage) with separate train/validation/test splits. Serves as the baseline model with clear feature importance for understanding key risk drivers.
@@ -611,7 +605,7 @@ Precision : 0.087
 - Balanced: Choose threshold 0.2–0.3 (good balance)
 
 
------------------------ 7. `train_xgboost.ipynb`
+----------------------- 6. `train_xgboost.ipynb`
 
 **Purpose:**
 Trains a gradient-boosted tree model as the challenger/champion model, optimizing for recall and PR-AUC. XGBoost often achieves higher performance on imbalanced datasets through ensemble methods and can capture non-linear relationships. Uses identical data splits and evaluation strategy as logistic regression for fair comparison.
@@ -698,16 +692,16 @@ feature_importance = pd.DataFrame({
 ### Key Findings
 
 **Strengths of XGBoost:**
-✅ **Perfect Recall:** Catches 100% of risky firms (zero false negatives)
-✅ **Superior PR-AUC:** 0.95 vs 0.85 (12% better discrimination)
-✅ **Strong Precision:** 75% precision maintains business utility
-✅ **Better Generalization:** Test metrics ≥ validation metrics (unusual, indicates good fit)
-✅ **Non-linear Captures:** Tree ensemble captures interactions that linear model misses
+**Perfect Recall:** Catches 100% of risky firms (zero false negatives)
+**Superior PR-AUC:** 0.95 vs 0.85 (12% better discrimination)
+**Strong Precision:** 75% precision maintains business utility
+**Better Generalization:** Test metrics ≥ validation metrics (unusual, indicates good fit)
+**Non-linear Captures:** Tree ensemble captures interactions that linear model misses
 
 **Trade-offs:**
-⚠️ **Less Interpretability:** Tree importance less direct than logistic coefficients
-⚠️ **More Complex:** Harder to explain individual predictions to stakeholders
-⚠️ **Hyperparameter Tuning:** Requires careful validation (done here)
+**Less Interpretability:** Tree importance less direct than logistic coefficients
+**More Complex:** Harder to explain individual predictions to stakeholders
+**Hyperparameter Tuning:** Requires careful validation (done here)
 
 **Why XGBoost Wins:**
 1. **Imbalanced Data:** Naturally handles 92:8 class imbalance through tree-based splits
@@ -716,10 +710,10 @@ feature_importance = pd.DataFrame({
 4. **Ensemble Strength:** 300 weak learners beat single linear model
 
 **Selection Criteria Met:**
-- ✅ Highest recall (1.00) — No risky firms missed
-- ✅ Highest PR-AUC (0.95) — Best overall discrimination
-- ✅ Competitive precision (0.75) — Acceptable false positive rate
-- ✅ Strong generalization — Future data performance stable/improving
+- Highest recall (1.00) — No risky firms missed
+- Highest PR-AUC (0.95) — Best overall discrimination
+- Competitive precision (0.75) — Acceptable false positive rate
+- Strong generalization — Future data performance stable/improving
 
 **Deployment Strategy:**
 1. **Primary Model:** XGBoost for risk scoring and flagging
@@ -742,10 +736,10 @@ feature_importance = pd.DataFrame({
 ---
 
 **Business Impact:**
-- ✅ **Zero Risky Firms Missed:** All financially stressed companies flagged for intervention
-- ✅ **Acceptable False Alarm Rate:** 3–7% false positive rate manageable for early warning
-- ✅ **Strong PR-AUC:** 0.95 indicates excellent ranking of risk scores
-- ✅ **Stable Predictions:** Validation and test metrics consistent (no overfitting)
+- **Zero Risky Firms Missed:** All financially stressed companies flagged for intervention
+- **Acceptable False Alarm Rate:** 3–7% false positive rate manageable for early warning
+- **Strong PR-AUC:** 0.95 indicates excellent ranking of risk scores
+- **Stable Predictions:** Validation and test metrics consistent (no overfitting)
 
 **Recommended Deployment Threshold:** 0.23 (default from hyperparameter tuning)
 - At this threshold: Recall 1.00, Precision 0.75
